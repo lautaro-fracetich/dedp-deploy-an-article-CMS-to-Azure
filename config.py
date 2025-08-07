@@ -14,16 +14,28 @@ class Config(object):
     SQL_DATABASE = os.environ.get('SQL_DATABASE') or 'ENTER_SQL_DB_NAME'
     SQL_USER_NAME = os.environ.get('SQL_USER_NAME') or 'ENTER_SQL_SERVER_USERNAME'
     SQL_PASSWORD = os.environ.get('SQL_PASSWORD') or 'ENTER_SQL_SERVER_PASSWORD'
+    
+    # Debug: Print environment variables (remove in production)
+    print(f"SQL_SERVER: {SQL_SERVER}")
+    print(f"SQL_DATABASE: {SQL_DATABASE}")
+    print(f"SQL_USER_NAME: {SQL_USER_NAME}")
+    
     # Below URI may need some adjustments for driver version, based on your OS, if running locally
-    SQLALCHEMY_DATABASE_URI = (
-        'mssql+pyodbc://{username}:{password}@{server}/{database}'
-        '?driver=ODBC+Driver+17+for+SQL+Server'
-    ).format(
-        username=quote_plus(SQL_USER_NAME),
-        password=quote_plus(SQL_PASSWORD),
-        server=SQL_SERVER,
-        database=SQL_DATABASE
-    )
+    if SQL_SERVER and SQL_DATABASE and SQL_USER_NAME and SQL_PASSWORD and not SQL_SERVER.startswith('ENTER_'):
+        SQLALCHEMY_DATABASE_URI = (
+            'mssql+pyodbc://{username}:{password}@{server}/{database}'
+            '?driver=ODBC+Driver+17+for+SQL+Server'
+        ).format(
+            username=quote_plus(SQL_USER_NAME),
+            password=quote_plus(SQL_PASSWORD),
+            server=SQL_SERVER,
+            database=SQL_DATABASE
+        )
+        print(f"Database URI: {SQLALCHEMY_DATABASE_URI}")
+    else:
+        # Fallback to SQLite for development
+        SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'app.db')
+        print(f"Using SQLite fallback: {SQLALCHEMY_DATABASE_URI}")
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     ### Info for MS Authentication ###
