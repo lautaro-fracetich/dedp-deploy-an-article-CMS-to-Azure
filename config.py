@@ -15,6 +15,9 @@ class Config(object):
     SQL_USER_NAME = os.environ.get('SQL_USER_NAME') or 'ENTER_SQL_SERVER_USERNAME'
     SQL_PASSWORD = os.environ.get('SQL_PASSWORD') or 'ENTER_SQL_SERVER_PASSWORD'
     
+    # Clean SQL_SERVER - remove protocol and trailing slashes
+    SQL_SERVER = SQL_SERVER.replace('http://', '').replace('https://', '').rstrip('/')
+    
     # Use SQLite as default for development/testing
     SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'app.db')
     
@@ -23,7 +26,7 @@ class Config(object):
         not any(var.startswith('ENTER_') for var in [SQL_SERVER, SQL_DATABASE, SQL_USER_NAME, SQL_PASSWORD])):
         try:
             # Debug: Print environment variables (remove in production)
-            print(f"SQL_SERVER: {SQL_SERVER}")
+            print(f"SQL_SERVER (cleaned): {SQL_SERVER}")
             print(f"SQL_DATABASE: {SQL_DATABASE}")
             print(f"SQL_USER_NAME: {SQL_USER_NAME}")
             
@@ -46,7 +49,6 @@ class Config(object):
 
     ### Info for MS Authentication ###
     ### As adapted from: https://github.com/Azure-Samples/ms-identity-python-webapp ###
-    CLIENT_SECRET = "ENTER_CLIENT_SECRET_HERE"
     # In your production app, Microsoft recommends you to use other ways to store your secret,
     # such as KeyVault, or environment variable as described in Flask's documentation here:
     # https://flask.palletsprojects.com/en/1.1.x/config/#configuring-from-environment-variables
@@ -57,7 +59,9 @@ class Config(object):
     AUTHORITY = "https://login.microsoftonline.com/common"  # For multi-tenant app, else put tenant name
     # AUTHORITY = "https://login.microsoftonline.com/Enter_the_Tenant_Name_Here"
 
-    CLIENT_ID = "ENTER_CLIENT_ID_HERE"
+    
+    CLIENT_SECRET = os.environ.get('CLIENT_SECRET') or 'ENTER_CLIENT_SECRET'
+    CLIENT_ID = os.environ.get('CLIENT_ID') or 'ENTER_CLIENT_ID'
 
     REDIRECT_PATH = "/getAToken"  # Used to form an absolute URL; must match to app's redirect_uri set in AAD
 
