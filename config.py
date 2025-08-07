@@ -15,26 +15,32 @@ class Config(object):
     SQL_USER_NAME = os.environ.get('SQL_USER_NAME') or 'ENTER_SQL_SERVER_USERNAME'
     SQL_PASSWORD = os.environ.get('SQL_PASSWORD') or 'ENTER_SQL_SERVER_PASSWORD'
     
-    # Debug: Print environment variables (remove in production)
-    print(f"SQL_SERVER: {SQL_SERVER}")
-    print(f"SQL_DATABASE: {SQL_DATABASE}")
-    print(f"SQL_USER_NAME: {SQL_USER_NAME}")
+    # Use SQLite as default for development/testing
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'app.db')
     
-    # Below URI may need some adjustments for driver version, based on your OS, if running locally
-    if SQL_SERVER and SQL_DATABASE and SQL_USER_NAME and SQL_PASSWORD and not SQL_SERVER.startswith('ENTER_'):
-        SQLALCHEMY_DATABASE_URI = (
-            'mssql+pyodbc://{username}:{password}@{server}/{database}'
-            '?driver=ODBC+Driver+17+for+SQL+Server'
-        ).format(
-            username=quote_plus(SQL_USER_NAME),
-            password=quote_plus(SQL_PASSWORD),
-            server=SQL_SERVER,
-            database=SQL_DATABASE
-        )
-        print(f"Database URI: {SQLALCHEMY_DATABASE_URI}")
+    # Override with SQL Server if all environment variables are properly configured
+    if (SQL_SERVER and SQL_DATABASE and SQL_USER_NAME and SQL_PASSWORD and 
+        not any(var.startswith('ENTER_') for var in [SQL_SERVER, SQL_DATABASE, SQL_USER_NAME, SQL_PASSWORD])):
+        try:
+            # Debug: Print environment variables (remove in production)
+            print(f"SQL_SERVER: {SQL_SERVER}")
+            print(f"SQL_DATABASE: {SQL_DATABASE}")
+            print(f"SQL_USER_NAME: {SQL_USER_NAME}")
+            
+            SQLALCHEMY_DATABASE_URI = (
+                'mssql+pyodbc://{username}:{password}@{server}/{database}'
+                '?driver=ODBC+Driver+17+for+SQL+Server'
+            ).format(
+                username=quote_plus(SQL_USER_NAME),
+                password=quote_plus(SQL_PASSWORD),
+                server=SQL_SERVER,
+                database=SQL_DATABASE
+            )
+            print(f"Using SQL Server: {SQLALCHEMY_DATABASE_URI}")
+        except Exception as e:
+            print(f"Error configuring SQL Server, falling back to SQLite: {e}")
+            SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'app.db')
     else:
-        # Fallback to SQLite for development
-        SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'app.db')
         print(f"Using SQLite fallback: {SQLALCHEMY_DATABASE_URI}")
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
